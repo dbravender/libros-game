@@ -1,8 +1,9 @@
+from copy import deepcopy
 import random
 
 from mock import patch
 from itertools import repeat
-from unittest import TestCase, skip
+from unittest import TestCase
 
 from libros.game import (
     deal, Game, Player,
@@ -30,8 +31,14 @@ class TestGame(TestCase):
             'change': zip(repeat(None), [-2, -2, -1, -1, 0, 1, 1, 2, 2]),
         }
 
+        self.assertEqual(range(87), sorted([card['id'] for card in deck]))
+
+        deck_without_ids = deepcopy(deck)
+        for card in deck_without_ids:
+            del card['id']
+
         self.assertEqual(
-            sorted(deck),
+            sorted(deck_without_ids),
             sorted({"type": color, "letter": letter, "value": int(value)}
                    for color, distribution in color_distribution.iteritems()
                    for letter, value in distribution)
