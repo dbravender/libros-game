@@ -5,7 +5,7 @@ var Card = React.createClass({
     return {selected: false};
   },
   render: function () {
-    return <div className="card {this.props.card.color}-color">{this.props.card.value} {this.props.card.letter}</div>
+    return <div key={this.props.card.id} className={'card ' + this.props.card.color + '-card'}>{this.props.card.value} {this.props.card.letter}</div>
   }
 });
 
@@ -34,10 +34,10 @@ var CardList = React.createClass({
 });
 
 var cards = [
-  {value: 1, color: 'red', letter: 'A'},
-  {value: 1, color: 'red', letter: 'B'},
-  {value: 1, color: 'red', letter: 'C'},
-  {value: 2, color: 'blue', letter: 'B'}
+  {value: 1, color: 'red', letter: 'A', 'id': 0},
+  {value: 1, color: 'red', letter: 'B', 'id': 1},
+  {value: 1, color: 'red', letter: 'C', 'id': 2},
+  {value: 2, color: 'blue', letter: 'B', 'id': 3}
 ]
 
 var cardList = React.renderComponent(
