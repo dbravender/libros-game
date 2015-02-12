@@ -54,7 +54,9 @@ def deal(players, cards_to_remove=None, gold_to_remove=None):
     letters = defaultdict(lambda: repeat(None), {
         color: iter(string.ascii_uppercase) for color in COLORS
     })
+    ids = iter(xrange(87))
     deck = [{
+        'id': next(ids),
         'type': kind,
         'value': value,
         'letter': next(letters[kind]),
