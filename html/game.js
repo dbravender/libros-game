@@ -12,17 +12,25 @@ var GameView = React.createClass({
       }
       cardsByType[type].push(card);
     }
-    this.childNodes = [];
+    var childNodes = [];
     for (var type in cardsByType) {
       var cards = cardsByType[type];
-      this.childNodes.push(<CardList cards={cards}/>);
+      childNodes.push(<CardList ref={type} cards={cards}/>);
     }
-    return <ul>{this.childNodes}</ul>;
+    return <div key="top"><ul key="list">{childNodes}</ul><button key="button" onClick={this.removeSelectedCards}>removeSelectedCards</button></div>;
+  },
+  removeSelectedCards: function () {
+    var selectedCards = this.selectedCards();
+    this.setProps({cards: this.props.cards.filter(function (card) { return selectedCards.indexOf(card.id) === -1; })})
   },
   selectedCards: function () {
+    var refs = [];
+    for (var ref in this.refs) {
+      refs.push(this.refs[ref]);
+    }
     var childNodeSelectedCards = [];
-    for (var i in this.childNodes) {
-      var childNode = this.childNodes[i];
+    for (var ref in refs) {
+      var childNode = refs[ref];
       childNodeSelectedCards.push(childNode.selectedCards());
     }
     return [].concat.apply([], childNodeSelectedCards);
@@ -50,21 +58,24 @@ var CardList = React.createClass({
     var lowestLetter = this.props.cards.reduce(function(x, y) {
       return [x, y.letter].sort()[0];
     }, null);
-    this.cardNodes = this.props.cards.map(function(card) {
-      return <Card key={card.id} card={card} />;
+    var cardNodes = this.props.cards.map(function(card) {
+      return <Card ref={card.id} key={card.id} card={card} />;
     });
     return (
       <li className="card-list">
         <span className={'card-summary badge ' + this.props.cards[0].type + '-type'}>
           {totalValue} {lowestLetter}
         </span>
-        {' '}{this.cardNodes}
+        {' '}{cardNodes}
       </li>
     );
   },
   selectedCards: function () {
-    return this.cardNodes
-               .filter(function (cardNode) { return cardNode.state.selected; })
+    var refs = [];
+    for (var ref in this.refs) {
+      refs.push(this.refs[ref]);
+    }
+    return refs.filter(function (cardNode) { return cardNode.state.selected; })
                .map(function (cardNode) { return cardNode.props.card.id; })
   }
 });
