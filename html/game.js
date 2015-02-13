@@ -2,6 +2,9 @@
 'use strict';
 
 var GameView = React.createClass({
+  getInitialState: function() {
+    return {state: 'discard', actionCard: null};
+  },
   render: function () {
     var cardsByType = {};
     for (var card in this.props.cards) {
@@ -13,14 +16,23 @@ var GameView = React.createClass({
       cardsByType[type].push(card);
     }
     var childNodes = [];
+    var bidComponent = null;
+    if (this.state.state === 'bid') {
+      bidComponent = <BidComponent actionCard={this.state.actionCard} minimumBid={this.state.minimumBid}/>;
+    }
     for (var type in cardsByType) {
       var cards = cardsByType[type];
-      childNodes.push(<CardList ref={type} cards={cards}/>);
+      childNodes.push(<CardList state={this.state.state} ref={type} cards={cards}/>);
     }
-    return <div key="top"><ul key="list">{childNodes}</ul><button key="button" onClick={this.removeSelectedCards}>removeSelectedCards</button></div>;
+    var payButton = null;
+    if (this.state.state === 'discard') {
+      payButton = <button key="button" onClick={this.removeSelectedCards}>pay</button>;
+    }
+    return <div key="top">{bidComponent}<ul key="list">{childNodes}</ul>{payButton}</div>;
   },
   removeSelectedCards: function () {
     var selectedCards = this.selectedCards();
+    alert(selectedCards);
     this.setProps({cards: this.props.cards.filter(function (card) { return selectedCards.indexOf(card.id) === -1; })})
   },
   selectedCards: function () {
@@ -37,6 +49,19 @@ var GameView = React.createClass({
   }
 });
 
+var BidComponent = React.createClass({
+  render: function () {
+    var components = [<Card card={this.props.actionCard}/>, <button onClick={this.bid.bind(this, null)}>pass</button>];
+    for (var i=this.props.minimumBid; i < 8 + this.props.minimumBid; i++) {
+      components.push(<button onClick={this.bid.bind(this, i)}>{i}</button>);
+    }
+    return <div>{components}</div>;
+  },
+  bid: function (amount) {
+    alert(amount);
+  }
+});
+
 var Card = React.createClass({
   getInitialState: function () {
     return {selected: false};
@@ -45,6 +70,9 @@ var Card = React.createClass({
     return <div onClick={this.toggle} key={this.props.card.id} className={(this.state.selected ? 'selected' : '') + ' card ' + this.props.card.type + '-type'}>{this.props.card.value} {this.props.card.letter}</div>
   },
   toggle: function() {
+    if (this.props.state !== 'discard') {
+      return;
+    }
     this.setState({selected: !this.state.selected})
   }
 });
@@ -59,7 +87,7 @@ var CardList = React.createClass({
       return [x, y.letter].sort()[0];
     }, null);
     var cardNodes = this.props.cards.map(function(card) {
-      return <Card ref={card.id} key={card.id} card={card} />;
+      return <Card state={self.props.state} ref={card.id} key={card.id} card={card} />;
     });
     return (
       <li className="card-list">
@@ -136,3 +164,5 @@ var gameView = React.renderComponent(
   document.getElementById('card-list')
 );
 gameView.setProps({cards: cards});
+//gameView.setProps({minimumBid: 3, actionCard: {value: 4, type: 'blue', 'letter': 'A'}})
+gameView.setState({state: 'bid', minimumBid: 6, actionCard: {type: 'blue', value: 4, letter: 'A'}})
