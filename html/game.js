@@ -26,7 +26,7 @@ var Card = React.createClass({
     return {selected: false};
   },
   render: function () {
-    return <div key={this.props.card.id} className={'card ' + this.props.card.color + '-card'}>{this.props.card.value} {this.props.card.letter}</div>
+    return <div key={this.props.card.id} className={'card ' + this.props.card.type + '-type'}>{this.props.card.value} {this.props.card.letter}</div>
   }
 });
 
@@ -44,8 +44,10 @@ var CardList = React.createClass({
     });
     return (
       <div className="card-list">
-        <span className="badge">{totalValue} {lowestLetter}</span>
-        <div>{cardNodes}</div>
+        <span className={'card-summary badge ' + this.props.cards[0].type + '-type'}>
+          {totalValue} {lowestLetter}
+        </span>
+        {' '}{cardNodes}
       </div>
     );
   }
@@ -55,7 +57,22 @@ var cards = [
   {value: 1, type: 'red', letter: 'A', 'id': 0},
   {value: 1, type: 'red', letter: 'B', 'id': 1},
   {value: 1, type: 'red', letter: 'C', 'id': 2},
-  {value: 2, type: 'blue', letter: 'B', 'id': 3}
+  {value: 1, type: 'red', letter: 'C', 'id': 3},
+  {value: 1, type: 'red', letter: 'C', 'id': 4},
+  {value: 1, type: 'red', letter: 'C', 'id': 5},
+  {value: 1, type: 'red', letter: 'C', 'id': 6},
+  {value: 1, type: 'red', letter: 'C', 'id': 7},
+  {value: 1, type: 'red', letter: 'C', 'id': 8},
+  {value: 1, type: 'red', letter: 'C', 'id': 9},
+  {value: 1, type: 'red', letter: 'C', 'id': 10},
+  {value: 1, type: 'red', letter: 'C', 'id': 11},
+  {value: 1, type: 'red', letter: 'C', 'id': 12},
+  {value: 1, type: 'red', letter: 'C', 'id': 13},
+  {value: 2, type: 'blue', letter: 'B', 'id': 14},
+  {value: 1, type: 'brown', letter: 'A', 'id': 15},
+  {value: 1, type: 'green', letter: 'B', 'id': 16},
+  {value: 1, type: 'orange', letter: 'C', 'id': 17},
+  {value: 2, type: 'gold', letter: null, 'id': 18},
 ]
 
 var gameView = React.renderComponent(
