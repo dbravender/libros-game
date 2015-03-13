@@ -7,17 +7,15 @@ var libros = require('../libros/main.js');
 var assert = require('assert');
 var _ = require('lodash');
 
-var deal = libros.deal;
-
 describe('deal', function () {
   it('should return the appropriate number of cards given the number of players', function () {
-    assert.strictEqual(80, deal(4).length);
-    assert.strictEqual(72, deal(3).length);
-    assert.strictEqual(60, deal(2).length);
-    assert.strictEqual(87, deal(4, 0, 0).length);
+    assert.strictEqual(80, libros.deal(4).length);
+    assert.strictEqual(72, libros.deal(3).length);
+    assert.strictEqual(60, libros.deal(2).length);
+    assert.strictEqual(87, libros.deal(4, 0, 0).length);
   });
   it('should have the appropriate cards in the deck', function () {
-    var deck = deal(4, 0, 0), colorDistribution;
+    var deck = libros.deal(4, 0, 0), colorDistribution;
 
     assert.deepEqual(_.range(87), _(deck).sortBy('id').pluck('id').value());
 
@@ -45,6 +43,20 @@ describe('deal', function () {
     });
 
     assert.strictEqual(1, _.where(deck, {'letter': null, 'value': 0, 'color': 'change'}).length);
+  });
+});
+
+describe('player', function () {
+  describe('scoreType', function () {
+    it('should sum and determine the highest letter for a color', function () {
+      var player = new libros.Player();
+      player.cards = [{color: 'gold', value: 3, letter: null},
+                      {color: 'green', value: 1, letter: 'A'},
+                      {color: 'green', value: 2, letter: 'D'}];
+      assert.deepEqual(player.scoreType('green'), [3, 'A']);
+      assert.deepEqual(player.scoreType('gold'), [3, null]);
+      assert.deepEqual(player.scoreType('red'), [0, null]);
+    });
   });
 });
 
@@ -118,7 +130,14 @@ class TestGame(TestCase):
         player, card, action = self._player_turn(game, ACTION_PILE_CARD)
 
         self.assertEqual(action, ACTION_PILE_CARD)
-        self._assert_cards_count(
+        self._as    def test_player_score(self):
+        player = Player()
+        player.cards = [{'type': 'gold', 'value': 3, 'letter': None},
+                        {'type': 'green', 'value': 1, 'letter': 'A'},
+                        {'type': 'green', 'value': 2, 'letter': 'D'}]
+        self.assertEqual(player.score_type('green'), (3, 'A'))
+        self.assertEqual(player.score_type('gold'), (3, None))
+        self.assertEqual(player.score_type('red'), (0, None))sert_cards_count(
             game, active_player, pile=1, public=0, discarded=0, player=0)
 
     def test_show_card(self):

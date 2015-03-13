@@ -8,6 +8,7 @@ var _ = require('lodash');
 
 var COLORS = ['blue', 'brown', 'red', 'orange', 'green'];
 
+var Player, deal;
 /*
 
 ACTION_TAKE_CARD = 0
@@ -24,7 +25,7 @@ ACTIONS = [
 ]
 */
 
-function deal(players, cardsToRemove, goldToRemove) {
+deal = exports.deal = function (players, cardsToRemove, goldToRemove) {
   var deck, cards, ids, lettersForColor = {};
   assert.notStrictEqual(-1, [2, 3, 4].indexOf(players));
   if (cardsToRemove === undefined) {
@@ -69,9 +70,19 @@ function deal(players, cardsToRemove, goldToRemove) {
   }));
   deck = _.shuffle(deck);
   return _.take(deck, deck.length - cardsToRemove);
-}
+};
 
-exports.deal = deal;
+Player = exports.Player = function () {
+  this.cards = [];
+};
+
+Player.prototype.scoreType = function (color) {
+  var cards, total, letter;
+  cards = _(this.cards).where({'color': color});
+  total = cards.pluck('value').reduce(function (x, y) { return x + y; }) || 0;
+  letter = cards.pluck('letter').sortBy().value()[0] || null;
+  return [total, letter];
+};
 
 /*
 class Game(object):
@@ -351,13 +362,4 @@ class Player(object):
         self.game.turn_complete(self, card, action)
 
         return action
-
-    def score_type(self, type):
-        ValueLetter = namedtuple('ValueLetter', ['value', 'letter'])
-        cards = [ValueLetter(card['value'], card['letter'])
-                 for card in self.cards if card['type'] == type]
-        if not cards:
-            return ValueLetter(0, None)
-        return ValueLetter(sum(card.value for card in cards),
-                           min(card.letter for card in cards))
 */
