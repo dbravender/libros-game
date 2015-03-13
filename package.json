@@ -5,6 +5,7 @@
   "repository": "https://github.com/dbravender/libros-game",
   "main": "libros/main.js",
   "dependencies": {
+    "javascript-natural-sort": "^0.7.1",
     "lodash": "^3.5.0"
   },
   "devDependencies": {
@@ -12,7 +13,7 @@
     "mocha": "^2.2.1"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "find -name '*.js' | xargs jslint && mocha"
   },
   "author": "Dan Bravender"
 }

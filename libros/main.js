@@ -3,12 +3,13 @@
 /*global describe, it */
 'use strict';
 
+var naturalSort = require('javascript-natural-sort');
 var assert = require('assert');
 var _ = require('lodash');
 
 var COLORS = ['blue', 'brown', 'red', 'orange', 'green'];
 
-var Player, deal;
+var Player, Game, deal;
 /*
 
 ACTION_TAKE_CARD = 0
@@ -79,9 +80,70 @@ Player = exports.Player = function () {
 Player.prototype.scoreType = function (color) {
   var cards, total, letter;
   cards = _(this.cards).where({'color': color});
-  total = cards.pluck('value').reduce(function (x, y) { return x + y; }) || 0;
+  total = cards.pluck('value').reduce(function (x, y) { return x + y; }, 0) || 0;
   letter = cards.pluck('letter').sortBy().value()[0] || null;
   return [total, letter];
+};
+
+Game = exports.Game = function () {
+  this.players = [];
+  this.deck = null;
+  this.state = 'waiting';
+  this.player = null;
+  this.pile = [];
+  this.public = [];
+  this.discarded = [];
+  this.actions_taken = [];
+  this.dice = {'blue': 0, 'red': 0, 'green': 0, 'orange': 0, 'brown': 0};
+  this.auction_card = [];
+};
+
+Game.prototype.start = function () {
+  this.state = 'turn';
+};
+
+Game.prototype.join = function (player) {
+  this.players.push(player);
+};
+
+Game.prototype.winner = function () {
+  var self = this, playerWon = {}, playerScores = {};
+  _.forEach(_.range(this.players.length), function (playerIndex) {
+    playerWon[playerIndex] = {};
+  });
+  _.forEach(COLORS, function (color) {
+    var winner = _(self.players)
+      .map(function (player, i) { return [player.scoreType(color), i]; })
+      .sortBy(naturalSort)
+      .last();
+    if (winner[0][1] !== null) {
+      if (!playerScores[winner[1]]) {
+        playerScores[winner[1]] = 0;
+      }
+      playerScores[winner[1]] += self.dice[color];
+      playerWon[winner[1]][color] = true;
+    }
+  });
+  /* The rules don't say this but the author says "Those involved in the
+     tie for the win will use the Illuminator category as a tie-breaker;
+     hence, whoever has the highest total value wins, then it goes to
+     tie-breaker card. If none of the tied players have an Illuminator,
+     then it moves down the line to Scribes and so on. This way, everyone
+    knows that Illuminators are slightly more valuable to have." */
+  return _(playerScores)
+    .map(function (score, playerIndex) {
+      return {'score': score,
+              gold: self.players[playerIndex].scoreType('gold')[0],
+              brown: playerWon[playerIndex].brown || false,
+              blue: playerWon[playerIndex].blue || false,
+              green: playerWon[playerIndex].green || false,
+              orange: playerWon[playerIndex].orange || false,
+              red: playerWon[playerIndex].red || false,
+              player: self.players[playerIndex]};
+    })
+    .sortByAll(['score', 'gold', 'brown', 'blue', 'green', 'orange', 'red'])
+    .last()
+    .player;
 };
 
 /*
@@ -291,32 +353,6 @@ class Game(object):
 
     def reset_actions(self):
         self.actions_taken.clear()
-
-    def winner(self):
-        score = namedtuple('Score', ['valueletter', 'player'])
-        player_won = defaultdict(dict)
-        player_scores = defaultdict(int)
-        for color in COLORS:
-            winner = max(score(player.score_type(color), player)
-                         for player in self.players)
-            if winner.valueletter.value:
-                player_scores[winner.player] += self.dice[color]
-                player_won[winner.player][color] = True
-        # The rules don't say this but the author says "Those involved in the
-        # tie for the win will use the Illuminator category as a tie-breaker;
-        # hence, whoever has the highest total value wins, then it goes to
-        # tie-breaker card. If none of the tied players have an Illuminator,
-        # then it moves down the line to Scribes and so on. This way, everyone
-        # knows that Illuminators are slightly more valuable to have."
-        return max((score,
-                    player.score_type('gold').value,
-                    'brown' in player_won[player],
-                    'blue' in player_won[player],
-                    'green' in player_won[player],
-                    'orange' in player_won[player],
-                    'red' in player_won[player],
-                    player)
-                   for player, score in player_scores.iteritems())[7]
 
 
 class Player(object):

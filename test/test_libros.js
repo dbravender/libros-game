@@ -7,6 +7,19 @@ var libros = require('../libros/main.js');
 var assert = require('assert');
 var _ = require('lodash');
 
+function startGame(playerCount) {
+  var players = _(_.range(playerCount)).map(function () { return new libros.Player(); }).value(),
+    game = new libros.Game();
+
+  _.forEach(players, function (player) { game.join(player); });
+  game.start();
+
+  assert.strictEqual(game.state, 'turn');
+  assert.strictEqual(game.players.length, playerCount);
+
+  return [game, players];
+}
+
 describe('deal', function () {
   it('should return the appropriate number of cards given the number of players', function () {
     assert.strictEqual(80, libros.deal(4).length);
@@ -56,6 +69,67 @@ describe('player', function () {
       assert.deepEqual(player.scoreType('green'), [3, 'A']);
       assert.deepEqual(player.scoreType('gold'), [3, null]);
       assert.deepEqual(player.scoreType('red'), [0, null]);
+    });
+  });
+});
+
+describe('game', function () {
+  describe('winner', function () {
+    it('should determine the winner in a simple scenario', function () {
+      var gamePlayers = startGame(2),
+        game = gamePlayers[0],
+        players = gamePlayers[1];
+      game.dice = {'green': 3, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1};
+      players[0].cards = [{'color': 'green', 'value': 2, 'letter': 'D'},
+                          {'color': 'blue', 'value': 3, 'letter': 'D'}];
+      assert.deepEqual(players[0].scoreType('green'), [2, 'D']);
+      players[1].cards = [{'color': 'red', 'value': 1, 'letter': 'A'},
+                          {'color': 'orange', 'value': 1, 'letter': 'A'},
+                          {'color': 'brown', 'value': 3, 'letter': 'D'}];
+      assert.strictEqual(game.winner(), players[0]);
+    });
+    it('should check gold as the first tiebreaker', function () {
+      var gamePlayers = startGame(2),
+        game = gamePlayers[0],
+        players = gamePlayers[1];
+      game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1};
+      players[0].cards = [{'color': 'green', 'value': 2, 'letter': 'D'},
+                          {'color': 'blue', 'value': 3, 'letter': 'D'},
+                          {'color': 'gold', 'value': 2, 'letter': null}];
+      players[1].cards = [{'color': 'red', 'value': 1, 'letter': 'A'},
+                          {'color': 'orange', 'value': 1, 'letter': 'A'},
+                          {'color': 'brown', 'value': 3, 'letter': 'D'},
+                          {'color': 'gold', 'value': 3, 'letter': null}];
+      assert.strictEqual(game.winner(), players[1]);
+    });
+    it('should check brown as the next tiebreaker', function () {
+      var gamePlayers = startGame(2),
+        game = gamePlayers[0],
+        players = gamePlayers[1];
+      game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1};
+      players[0].cards = [{'color': 'green', 'value': 2, 'letter': 'D'},
+                          {'color': 'brown', 'value': 2, 'letter': 'D'},
+                          {'color': 'gold', 'value': 3, 'letter': null}];
+      players[1].cards = [{'color': 'red', 'value': 1, 'letter': 'A'},
+                          {'color': 'orange', 'value': 1, 'letter': 'A'},
+                          {'color': 'blue', 'value': 3, 'letter': 'D'},
+                          {'color': 'gold', 'value': 3, 'letter': null}];
+      assert.strictEqual(game.winner(), players[0]);
+    });
+    it('should check orange as the last tiebreaker', function () {
+      var gamePlayers = startGame(3),
+        game = gamePlayers[0],
+        players = gamePlayers[1];
+      game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1};
+      players[0].cards = [{'color': 'red', 'value': 2, 'letter': 'D'},
+                          {'color': 'brown', 'value': 2, 'letter': 'B'},
+                          {'color': 'gold', 'value': 3, 'letter': null}];
+      players[1].cards = [{'color': 'orange', 'value': 3, 'letter': 'A'},
+                          {'color': 'gold', 'value': 3, 'letter': null}];
+      // player 2 should not be considered for the tie breaker because his
+      // score was too low
+      players[2].cards = [{'color': 'brown', 'value': 4, 'letter': 'C'}];
+      assert.strictEqual(game.winner(), players[1]);
     });
   });
 });
@@ -293,60 +367,4 @@ class TestGame(TestCase):
         self.assertEqual(game.public_count, 0)
         self.assertEqual(game.pile_count, 0)
         self.assertEqual(game.discarded_count + player_cards, 80)
-
-    def test_player_score(self):
-        player = Player()
-        player.cards = [{'type': 'gold', 'value': 3, 'letter': None},
-                        {'type': 'green', 'value': 1, 'letter': 'A'},
-                        {'type': 'green', 'value': 2, 'letter': 'D'}]
-        self.assertEqual(player.score_type('green'), (3, 'A'))
-        self.assertEqual(player.score_type('gold'), (3, None))
-        self.assertEqual(player.score_type('red'), (0, None))
-
-    def test_game_score(self):
-        game, players = self._start_game(2)
-        game.dice = {'green': 3, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1}
-        players[0].cards = [{'type': 'green', 'value': 2, 'letter': 'D'},
-                            {'type': 'blue', 'value': 3, 'letter': 'D'}]
-        players[1].cards = [{'type': 'red', 'value': 1, 'letter': 'A'},
-                            {'type': 'orange', 'value': 1, 'letter': 'A'},
-                            {'type': 'brown', 'value': 3, 'letter': 'D'}]
-        self.assertEqual(game.winner(), players[0])
-
-    def test_game_score_gold_tiebreaker(self):
-        game, players = self._start_game(2)
-        game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1}
-        players[0].cards = [{'type': 'green', 'value': 2, 'letter': 'D'},
-                            {'type': 'blue', 'value': 3, 'letter': 'D'},
-                            {'type': 'gold', 'value': 2, 'letter': None}]
-        players[1].cards = [{'type': 'red', 'value': 1, 'letter': 'A'},
-                            {'type': 'orange', 'value': 1, 'letter': 'A'},
-                            {'type': 'brown', 'value': 3, 'letter': 'D'},
-                            {'type': 'gold', 'value': 3, 'letter': None}]
-        self.assertEqual(game.winner(), players[1])
-
-    def test_game_score_monk_tiebreaker(self):
-        game, players = self._start_game(2)
-        game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1}
-        players[0].cards = [{'type': 'green', 'value': 2, 'letter': 'D'},
-                            {'type': 'brown', 'value': 2, 'letter': 'D'},
-                            {'type': 'gold', 'value': 3, 'letter': None}]
-        players[1].cards = [{'type': 'red', 'value': 1, 'letter': 'A'},
-                            {'type': 'orange', 'value': 1, 'letter': 'A'},
-                            {'type': 'blue', 'value': 3, 'letter': 'D'},
-                            {'type': 'gold', 'value': 3, 'letter': None}]
-        self.assertEqual(game.winner(), players[0])
-
-    def test_game_score_orange_tiebreaker(self):
-        game, players = self._start_game(3)
-        game.dice = {'green': 2, 'blue': 1, 'red': 1, 'orange': 1, 'brown': 1}
-        players[0].cards = [{'type': 'red', 'value': 2, 'letter': 'D'},
-                            {'type': 'brown', 'value': 2, 'letter': 'B'},
-                            {'type': 'gold', 'value': 3, 'letter': None}]
-        players[1].cards = [{'type': 'orange', 'value': 3, 'letter': 'A'},
-                            {'type': 'gold', 'value': 3, 'letter': None}]
-        # player 2 should not be considered for the tie breaker because his
-        # score was too low
-        players[2].cards = [{'type': 'brown', 'value': 4, 'letter': 'C'}]
-        self.assertEqual(game.winner(), players[1])
 */
