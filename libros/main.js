@@ -1,9 +1,14 @@
-import random
-import string
+/*jslint nomen: true*/
+/*jslint indent: 2 */
+/*global describe, it */
+'use strict';
 
-from itertools import cycle, repeat
-from collections import Counter, defaultdict, namedtuple
+var assert = require('assert');
+var _ = require('lodash');
 
+var COLORS = ['blue', 'brown', 'red', 'orange', 'green'];
+
+/*
 
 ACTION_TAKE_CARD = 0
 ACTION_PILE_CARD = 1
@@ -17,55 +22,58 @@ ACTIONS = [
     ACTION_SHOW_CARD, ACTION_DISCARD_CARD,
     ACTION_USE_CARD, ACTION_BID_CARD,
 ]
+*/
 
-COLORS = ('blue', 'brown', 'red', 'orange', 'green')
+function deal(players, cardsToRemove, goldToRemove) {
+  var deck, cards, ids, lettersForColor = {};
+  assert.notStrictEqual(-1, [2, 3, 4].indexOf(players));
+  if (cardsToRemove === undefined) {
+    cardsToRemove = {2: 21, 3: 12, 4: 7}[players];
+  }
+  if (goldToRemove === undefined) {
+    goldToRemove = 4 - players;
+  }
+  cards = [
+    ['blue',    2, 4],
+    ['blue',    3, 3],
+    ['blue',    4, 2],
+    ['brown',   2, 4],
+    ['brown',   3, 3],
+    ['brown',   4, 2],
+    ['red',     1, 7],
+    ['red',     2, 2],
+    ['orange',  1, 7],
+    ['orange',  2, 2],
+    ['green',   1, 7],
+    ['green',   2, 2],
+    ['change', -2, 2],
+    ['change', -1, 2],
+    ['change',  2, 2],
+    ['change',  1, 2],
+    ['change',  0, 1],  // plus or minus
+    ['gold',    1, 11 - goldToRemove],
+    ['gold',    2, 11 - goldToRemove],
+    ['gold',    3, 11 - goldToRemove]];
+  _.forEach(COLORS, function (color) {
+    lettersForColor[color] = _.map(_.range(26), function (i) { return String.fromCharCode(i + 65); });
+  });
+  ids = _.range(87);
+  deck = _.flatten(_.map(cards, function (colorValueCount) {
+    var color = colorValueCount[0], value = colorValueCount[1], count = colorValueCount[2];
+    return _.map(_.range(count), function () {
+      return {'color': color,
+              letter: lettersForColor[color] ? lettersForColor[color].shift() : null,
+              value: value,
+              id: ids.shift()};
+    });
+  }));
+  deck = _.shuffle(deck);
+  return _.take(deck, deck.length - cardsToRemove);
+}
 
+exports.deal = deal;
 
-def deal(players, cards_to_remove=None, gold_to_remove=None):
-    assert players in [2, 3, 4]
-
-    if cards_to_remove is None:
-        cards_to_remove = {2: 21, 3: 12, 4: 7}.get(players)
-
-    if gold_to_remove is None:
-        gold_to_remove = 4 - players
-
-    cards = (
-        ('blue',    2, 4),
-        ('blue',    3, 3),
-        ('blue',    4, 2),
-        ('brown',   2, 4),
-        ('brown',   3, 3),
-        ('brown',   4, 2),
-        ('red',     1, 7),
-        ('red',     2, 2),
-        ('orange',  1, 7),
-        ('orange',  2, 2),
-        ('green',   1, 7),
-        ('green',   2, 2),
-        ('change', -2, 2),
-        ('change', -1, 2),
-        ('change',  2, 2),
-        ('change',  1, 2),
-        ('change',  0, 1),  # plus or minus
-        ('gold',    1, 11 - gold_to_remove),
-        ('gold',    2, 11 - gold_to_remove),
-        ('gold',    3, 11 - gold_to_remove))
-    letters = defaultdict(lambda: repeat(None), {
-        color: iter(string.ascii_uppercase) for color in COLORS
-    })
-    ids = iter(xrange(87))
-    deck = [{
-        'id': next(ids),
-        'type': kind,
-        'value': value,
-        'letter': next(letters[kind]),
-    } for kind, value, count in cards for _ in xrange(count)]
-    random.shuffle(deck)
-
-    return deck[cards_to_remove:]
-
-
+/*
 class Game(object):
     def __init__(self):
         self.players = []
@@ -352,3 +360,4 @@ class Player(object):
             return ValueLetter(0, None)
         return ValueLetter(sum(card.value for card in cards),
                            min(card.letter for card in cards))
+*/

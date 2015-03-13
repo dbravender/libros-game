@@ -1,10 +1,54 @@
-from copy import deepcopy
-import random
+/*jslint nomen: true*/
+/*jslint indent: 2 */
+/*global describe, it */
+'use strict';
 
-from mock import patch
-from itertools import repeat
-from unittest import TestCase
+var libros = require('../libros/main.js');
+var assert = require('assert');
+var _ = require('lodash');
 
+var deal = libros.deal;
+
+describe('deal', function () {
+  it('should return the appropriate number of cards given the number of players', function () {
+    assert.strictEqual(80, deal(4).length);
+    assert.strictEqual(72, deal(3).length);
+    assert.strictEqual(60, deal(2).length);
+    assert.strictEqual(87, deal(4, 0, 0).length);
+  });
+  it('should have the appropriate cards in the deck', function () {
+    var deck = deal(4, 0, 0), colorDistribution;
+
+    assert.deepEqual(_.range(87), _(deck).sortBy('id').pluck('id').value());
+
+    colorDistribution = {
+      'red': _.zip('ABCDEFGHI', _.repeat('1', 7) + _.repeat('2', 2)),
+      'orange': _.zip('ABCDEFGHI', _.repeat('1', 7) + _.repeat('2', 2)),
+      'green': _.zip('ABCDEFGHI', _.repeat('1', 7) + _.repeat('2', 2)),
+      'blue': _.zip('ABCDEFGHI', _.repeat('2', 4) + _.repeat('3', 3) + _.repeat('4', 2)),
+      'brown': _.zip('ABCDEFGHI', _.repeat('2', 4) + _.repeat('3', 3) + _.repeat('4', 2)),
+    };
+
+    _.forEach(colorDistribution, function (letterValues, color) {
+      _.forEach(letterValues, function (letterValue) {
+        var letter = letterValue[0], value = letterValue[1];
+        assert.strictEqual(1, _.where(deck, {'letter': letter, 'value': parseInt(value, 10), 'color': color}).length);
+      });
+    });
+
+    _.forEach(_.range(1, 4), function (goldValue) {
+      assert.strictEqual(11, _.where(deck, {'letter': null, 'value': goldValue, 'color': 'gold'}).length);
+    });
+
+    _.forEach([-2, -1, 1, 2], function (changeValue) {
+      assert.strictEqual(2, _.where(deck, {'letter': null, 'value': changeValue, 'color': 'change'}).length);
+    });
+
+    assert.strictEqual(1, _.where(deck, {'letter': null, 'value': 0, 'color': 'change'}).length);
+  });
+});
+
+/*
 from libros.game import (
     deal, Game, Player,
     ACTIONS, ACTION_PILE_CARD, ACTION_SHOW_CARD,
@@ -13,37 +57,6 @@ from libros.game import (
 
 
 class TestGame(TestCase):
-    def test_deal(self):
-        self.assertEqual(len(deal(4)), 80)
-        self.assertEqual(len(deal(3)), 72)
-        self.assertEqual(len(deal(2)), 60)
-
-    def test_deal_cards(self):
-        deck = deal(2, cards_to_remove=0, gold_to_remove=0)
-
-        color_distribution = {
-            'red': zip('ABCDEFGHI', '1' * 7 + '2' * 2),
-            'orange': zip('ABCDEFGHI', '1' * 7 + '2' * 2),
-            'green': zip('ABCDEFGHI', '1' * 7 + '2' * 2),
-            'blue': zip('ABCDEFGHI', '2' * 4 + '3' * 3 + '4' * 2),
-            'brown': zip('ABCDEFGHI', '2' * 4 + '3' * 3 + '4' * 2),
-            'gold': zip(repeat(None), '1' * 11 + '2' * 11 + '3' * 11),
-            'change': zip(repeat(None), [-2, -2, -1, -1, 0, 1, 1, 2, 2]),
-        }
-
-        self.assertEqual(range(87), sorted([card['id'] for card in deck]))
-
-        deck_without_ids = deepcopy(deck)
-        for card in deck_without_ids:
-            del card['id']
-
-        self.assertEqual(
-            sorted(deck_without_ids),
-            sorted({"type": color, "letter": letter, "value": int(value)}
-                   for color, distribution in color_distribution.iteritems()
-                   for letter, value in distribution)
-        )
-
     def test_join(self):
         player1 = Player()
         player2 = Player()
@@ -317,3 +330,4 @@ class TestGame(TestCase):
         # score was too low
         players[2].cards = [{'type': 'brown', 'value': 4, 'letter': 'C'}]
         self.assertEqual(game.winner(), players[1])
+*/
