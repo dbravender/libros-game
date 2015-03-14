@@ -74,6 +74,19 @@ describe('player', function () {
 });
 
 describe('game', function () {
+  describe('join', function () {
+    var player1 = new libros.Player(),
+      player2 = new libros.Player(),
+      game = new libros.Game();
+    game.join(player1);
+    assert.strictEqual(game.state, 'waiting');
+    assert.strictEqual(game.players.length, 1);
+    game.join(player2);
+    assert.strictEqual(game.state, 'waiting');
+    assert.strictEqual(game.players.length, 2);
+    game.start();
+    assert.strictEqual(game.state, 'turn');
+  });
   describe('winner', function () {
     it('should determine the winner in a simple scenario', function () {
       var gamePlayers = startGame(2),
@@ -143,18 +156,7 @@ from libros.game import (
 
 
 class TestGame(TestCase):
-    def test_join(self):
-        player1 = Player()
-        player2 = Player()
-        game = Game()
-        game.join(player1)
-        self.assertEqual(game.state, 'waiting')
-        self.assertEqual(game.player_count, 1)
-        game.join(player2)
-        self.assertEqual(game.state, 'waiting')
-        self.assertEqual(game.player_count, 2)
-        game.start()
-        self.assertEqual(game.state, 'turn')
+
 
     def _start_game(self, num_players=2):
         players = [Player() for i in range(num_players)]
