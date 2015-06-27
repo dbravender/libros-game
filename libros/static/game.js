@@ -108,61 +108,23 @@ var CardList = React.createClass({
   }
 });
 
-var cards = [
-  {value: 1, type: 'red', letter: 'A'},
-  {value: 1, type: 'red', letter: 'B'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 1, type: 'red', letter: 'C'},
-  {value: 2, type: 'blue', letter: 'B'},
-  {value: 1, type: 'brown', letter: 'A'},
-  {value: 1, type: 'green', letter: 'B'},
-  {value: 1, type: 'orange', letter: 'C'},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-  {value: 2, type: 'gold', letter: null},
-]
-
-var id = 0;
-for (var card in cards) {
-  cards[card]['id'] = id++;
-}
-
-var gameView = React.renderComponent(
+var gameView = React.render(
   <GameView/>,
   document.getElementById('card-list')
 );
-gameView.setProps({cards: cards});
+//gameView.setProps({cards: cards});
 //gameView.setProps({minimumBid: 3, actionCard: {value: 4, type: 'blue', 'letter': 'A'}})
-gameView.setState({state: 'bid', minimumBid: 6, actionCard: {type: 'blue', value: 4, letter: 'A'}})
+//gameView.setState({state: 'bid', minimumBid: 6, actionCard: {type: 'blue', value: 4, letter: 'A'}})
+
+var namespace = '/libros';
+
+var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+
+socket.on('connect', function() {
+  socket.emit('join', {room: '1'});
+});
+
+socket.on('update', function (msg) {
+  console.log(msg.data);
+  gameView.setProps(JSON.parse(msg.data));
+});
